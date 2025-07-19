@@ -3,19 +3,21 @@ package de.unhappycodings.quarry.client.config;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.NeoForgeConfig;
 
 import java.io.File;
 
 public class ClientConfig {
-    public static ForgeConfigSpec clientConfig;
+    public static NeoForgeConfig.Client clientConfig;
 
     //region General
-    public static ForgeConfigSpec.ConfigValue<Boolean> enableQuarryDarkmode;
-    public static ForgeConfigSpec.ConfigValue<Boolean> enableAreaCardCornerRendering;
+    public static ModConfigSpec.ConfigValue<Boolean> enableQuarryDarkmode;
+    public static ModConfigSpec.ConfigValue<Boolean> enableAreaCardCornerRendering;
     //endregion
 
     static {
-        ForgeConfigSpec.Builder clientBuilder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder clientBuilder = new ModConfigSpec.Builder();
         init(clientBuilder);
         clientConfig = clientBuilder.build();
     }
