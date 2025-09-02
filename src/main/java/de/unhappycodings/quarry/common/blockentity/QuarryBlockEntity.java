@@ -59,10 +59,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class QuarryBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, MenuProvider {
-    private static final int SPEED_0 = 15;
-    private static final int SPEED_1 = 10;
-    private static final int SPEED_2 = 5; // 5
-    private static final int SPEED_3 = 2; // 2
+    private static final int SPEED_0 = 7; // Doublé (15 -> 7)
+    private static final int SPEED_1 = 5; // Doublé (10 -> 5)
+    private static final int SPEED_2 = 2; // Doublé (5 -> 2)
+    private static final int SPEED_3 = 1; // Doublé (2 -> 1)
     private final LazyOptional<? extends IItemHandler>[] itemHandler = SidedInvWrapper.create(this, Direction.values());
     public LootParams.Builder lootcontextBuilder;
     public List<BlockPos> blockStateList;
@@ -104,8 +104,11 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
     @SuppressWarnings("ConstantConditions")
     public void tick() {
-        if (fakePlayer == null) fakePlayer = FakePlayerFactory.get((ServerLevel) this.getLevel(), new GameProfile(UUID.fromString("6e483f02-30db-4454-b612-3a167614b576"), "vanillaquarry"));
-        if (level.isClientSide) return;
+        if (fakePlayer == null)
+            fakePlayer = FakePlayerFactory.get((ServerLevel) this.getLevel(),
+                    new GameProfile(UUID.fromString("6e483f02-30db-4454-b612-3a167614b576"), "vanillaquarry"));
+        if (level.isClientSide)
+            return;
         fakePlayer.tick();
         Level level = getLevel();
         BlockState state = getBlockState();
@@ -135,9 +138,12 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
             LazyOptional<IItemHandler> quarryCapability = this.getCapability(ForgeCapabilities.ITEM_HANDLER);
             if (quarryCapability.isPresent() && quarryCapability.resolve().isPresent()) {
                 IItemHandler quarryHandler = quarryCapability.resolve().get();
-                if (right.hasBlockEntity()) exportImportRightSide(quarryHandler, in);
-                if (above.hasBlockEntity()) exportImportAbove(quarryHandler, in);
-                if (below.hasBlockEntity()) exportImportBelow(quarryHandler, out);
+                if (right.hasBlockEntity())
+                    exportImportRightSide(quarryHandler, in);
+                if (above.hasBlockEntity())
+                    exportImportAbove(quarryHandler, in);
+                if (below.hasBlockEntity())
+                    exportImportBelow(quarryHandler, out);
             }
         }
 
@@ -154,9 +160,11 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
         if (!state.getValue(QuarryBlock.POWERED) && state.getValue(QuarryBlock.ACTIVE))
             level.setBlockAndUpdate(getBlockPos(), state.setValue(QuarryBlock.ACTIVE, burnTime > 0));
         if (!state.getValue(QuarryBlock.ACTIVE) && state.getValue(QuarryBlock.WORKING))
-            level.setBlockAndUpdate(getBlockPos(), state.setValue(QuarryBlock.POWERED, burnTime > 0).setValue(QuarryBlock.WORKING, false));
+            level.setBlockAndUpdate(getBlockPos(),
+                    state.setValue(QuarryBlock.POWERED, burnTime > 0).setValue(QuarryBlock.WORKING, false));
 
-        if (burnTime >= CommonConfig.quarryIdleConsumption.get() && burnTicks >= 20 && !state.getValue(QuarryBlock.WORKING)) {
+        if (burnTime >= CommonConfig.quarryIdleConsumption.get() && burnTicks >= 20
+                && !state.getValue(QuarryBlock.WORKING)) {
             burnTime -= CommonConfig.quarryIdleConsumption.get();
             burnTicks = 0;
         }
@@ -177,22 +185,28 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                     // Get Speed and set to variables
                     int speedModifier = 0;
                     boolean speedy = speed == 0 && !(ticks + speedModifier >= SPEED_0);
-                    if (speed == 1 && !(ticks + speedModifier >= SPEED_1)) speedy = true;
-                    if (speed == 2 && !(ticks + speedModifier >= SPEED_2)) speedy = true;
-                    if (speed == 3 && !(ticks + speedModifier >= SPEED_3)) speedy = true;
+                    if (speed == 1 && !(ticks + speedModifier >= SPEED_1))
+                        speedy = true;
+                    if (speed == 2 && !(ticks + speedModifier >= SPEED_2))
+                        speedy = true;
+                    if (speed == 3 && !(ticks + speedModifier >= SPEED_3))
+                        speedy = true;
 
                     // Get Mode to variables to work with in-code easier!
                     updateModeModifiers();
 
-                    if (blockStateList == null || blockStateList.isEmpty()) refreshPositions(cardSlot);
+                    if (blockStateList == null || blockStateList.isEmpty())
+                        refreshPositions(cardSlot);
                     float fuelModifier = CalcUtil.getNeededTicks(mode, speed);
                     if (!blockStateList.isEmpty() && burnTime > fuelModifier) {
-                        if (!itemTag.contains("lastBlock")) itemTag.putInt("lastBlock", 0);
+                        if (!itemTag.contains("lastBlock"))
+                            itemTag.putInt("lastBlock", 0);
 
                         // Item Data Reset And Machine Turn Off
                         int blockIndex = itemTag.getInt("lastBlock");
                         if (blockIndex > blockStateList.size() - 1) {
-                            level.setBlockAndUpdate(getBlockPos(), state.setValue(QuarryBlock.WORKING, false).setValue(QuarryBlock.ACTIVE, false));
+                            level.setBlockAndUpdate(getBlockPos(),
+                                    state.setValue(QuarryBlock.WORKING, false).setValue(QuarryBlock.ACTIVE, false));
                             itemTag.putInt("lastBlock", 0);
                             if (getLoop())
                                 level.setBlockAndUpdate(getBlockPos(), state.setValue(QuarryBlock.ACTIVE, true));
@@ -208,8 +222,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                         int distanceY = currentBlock.getY() - getBlockPos().getY();
                         int distanceZ = currentBlock.getZ() - getBlockPos().getZ();
 
-                        int maxRadius = CommonConfig.quarryMineRadius.get();
-                        if (((distanceX > maxRadius || distanceX < -maxRadius) || (distanceY > maxRadius || distanceY < -maxRadius) || (distanceZ > maxRadius || distanceZ < -maxRadius)) || isInNearSquare(this.getBlockPos(), currentBlock)) {
+                        // Vérification uniquement pour les blocs dans le rayon de 1 autour de la quarry
+                        if (isInNearSquare(this.getBlockPos(), currentBlock)) {
                             updateCardNbt(itemTag, blockIndex + 1, currentBlock.getY());
                             return;
                         }
@@ -225,11 +239,14 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                             burnTime -= (int) fuelModifier;
                         } else {
                             // Block Drops Looping with Inventory-Space Checking and Block Breaking
-                            List<ItemStack> drops = currentBlockState.getDrops(getBuilder(level, currentBlock, isSilktouch));
+                            List<ItemStack> drops = currentBlockState
+                                    .getDrops(getBuilder(level, currentBlock, isSilktouch));
                             if (drops.isEmpty()) {
                                 if (allowedToBreak(currentBlockState, level, currentBlock, fakePlayer)) {
                                     setChanged();
-                                    level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5, currentBlock.getZ() + 0.5, currentBlockState.getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f, 1f);
+                                    level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5,
+                                            currentBlock.getZ() + 0.5, currentBlockState.getSoundType().getBreakSound(),
+                                            SoundSource.BLOCKS, 1f, 1f);
                                     level.setBlock(currentBlock, Blocks.AIR.defaultBlockState(), 3);
                                 }
                                 updateCardNbt(itemTag, blockIndex + 1, currentBlock.getY());
@@ -257,7 +274,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
                                     if (allowedToBreak(currentBlockState, level, currentBlock, fakePlayer)) {
                                         if (!filtered)
-                                            setItem(index, new ItemStack(drop.getItem(), getItem(index).getCount() + drop.getCount()));
+                                            setItem(index, new ItemStack(drop.getItem(),
+                                                    getItem(index).getCount() + drop.getCount()));
                                         burnTime -= (int) fuelModifier;
                                         broken = true;
                                     }
@@ -279,7 +297,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                         }
                     } else {
                         // Machine turns off after use
-                        level.setBlock(getBlockPos(), state.setValue(QuarryBlock.ACTIVE, false).setValue(QuarryBlock.WORKING, false), 3);
+                        level.setBlock(getBlockPos(),
+                                state.setValue(QuarryBlock.ACTIVE, false).setValue(QuarryBlock.WORKING, false), 3);
                     }
 
                     ticks = 0;
@@ -293,7 +312,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     // UTIL METHODS
 
     private void exportImportRightSide(IItemHandler quarryHandler, boolean input) {
-        if (level == null) return;
+        if (level == null)
+            return;
 
         BlockEntity tileRight = switch (this.getBlockState().getValue(QuarryBlock.FACING)) {
             case NORTH -> level.getBlockEntity(getBlockPos().west());
@@ -308,9 +328,12 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                 IItemHandler handlerRight = capabilityRight.resolve().get();
                 for (int i = 0; i < handlerRight.getSlots(); i++) {
                     ItemStack stack = handlerRight.getStackInSlot(i);
-                    if (!(stack.getItem() instanceof BlockItem)) continue;
-                    if (quarryHandler.getStackInSlot(13).is(stack.getItem()) || quarryHandler.getStackInSlot(13).is(Items.AIR)) {
-                        if (quarryHandler.getStackInSlot(13).getCount() < quarryHandler.getStackInSlot(13).getMaxStackSize()) {
+                    if (!(stack.getItem() instanceof BlockItem))
+                        continue;
+                    if (quarryHandler.getStackInSlot(13).is(stack.getItem())
+                            || quarryHandler.getStackInSlot(13).is(Items.AIR)) {
+                        if (quarryHandler.getStackInSlot(13).getCount() < quarryHandler.getStackInSlot(13)
+                                .getMaxStackSize()) {
                             quarryHandler.insertItem(13, new ItemStack(stack.getItem(), 1), false);
                             handlerRight.extractItem(i, 1, false);
                             break;
@@ -322,7 +345,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     }
 
     private void exportImportAbove(IItemHandler quarryHandler, boolean input) {
-        if (level == null) return;
+        if (level == null)
+            return;
 
         BlockEntity tileAbove = level.getBlockEntity(getBlockPos().above());
         if (tileAbove != null) {
@@ -345,7 +369,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     }
 
     private void exportImportBelow(IItemHandler quarryHandler, boolean output) {
-        if (level == null) return;
+        if (level == null)
+            return;
 
         BlockEntity tileBelow = level.getBlockEntity(getBlockPos().below());
         if (tileBelow != null) {
@@ -368,7 +393,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                             }
                         }
                     }
-                    if (doBreak) break;
+                    if (doBreak)
+                        break;
                 }
             }
         }
@@ -388,7 +414,7 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     }
 
     @SuppressWarnings("deprecation")
-    private void refuelQuarry(List<ItemStack> input ) {
+    private void refuelQuarry(List<ItemStack> input) {
         for (int i = 0; i < input.size(); i++) {
             if (ForgeHooks.getBurnTime(input.get(i), null) > 0) {
                 Item stack = input.get(i).getItem();
@@ -443,14 +469,18 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     }
 
     private void breakBlock(BlockPos currentBlock, BlockState currentBlockState) {
-        if (level == null) return;
+        if (level == null)
+            return;
 
-        level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5, currentBlock.getZ() + 0.5, currentBlockState.getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f, 1f);
+        level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5, currentBlock.getZ() + 0.5,
+                currentBlockState.getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f, 1f);
         if (getItem(13).getItem() instanceof BlockItem blockItem) {
             ItemStack inputItem = getItem(13);
             inputItem.shrink(1);
             setItem(13, inputItem);
-            level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5, currentBlock.getZ() + 0.5, blockItem.getBlock().defaultBlockState().getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f, 1f);
+            level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5, currentBlock.getZ() + 0.5,
+                    blockItem.getBlock().defaultBlockState().getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f,
+                    1f);
             level.setBlock(currentBlock, blockItem.getBlock().defaultBlockState(), Block.UPDATE_ALL);
         } else {
             level.levelEvent(fakePlayer, 2001, currentBlock, Block.getId(currentBlockState));
@@ -459,13 +489,19 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     }
 
     private void tryReplaceFluidSources(BlockPos currentBlock) {
-        if (level == null) return;
+        if (level == null)
+            return;
 
-        BlockPos[] positions = {currentBlock.north(), currentBlock.east(), currentBlock.south(), currentBlock.west(), currentBlock.above(), currentBlock.below()};
+        BlockPos[] positions = { currentBlock.north(), currentBlock.east(), currentBlock.south(), currentBlock.west(),
+                currentBlock.above(), currentBlock.below() };
         for (BlockPos pos : positions) {
-            if (level.getBlockState(pos).getFluidState().isSource() && !level.getBlockState(pos).hasProperty(BlockStateProperties.WATERLOGGED)) {
+            if (level.getBlockState(pos).getFluidState().isSource()
+                    && !level.getBlockState(pos).hasProperty(BlockStateProperties.WATERLOGGED)) {
                 level.setBlock(pos, Blocks.COBBLESTONE.defaultBlockState(), 3);
-                level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5, currentBlock.getZ() + 0.5, Blocks.COBBLESTONE.defaultBlockState().getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f, 1f);
+                level.playSound(fakePlayer, currentBlock.getX() + 0.5, currentBlock.getY() + 0.5,
+                        currentBlock.getZ() + 0.5,
+                        Blocks.COBBLESTONE.defaultBlockState().getSoundType().getBreakSound(), SoundSource.BLOCKS, 1f,
+                        1f);
             }
         }
     }
@@ -479,10 +515,13 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     public int hasInputSpace(ItemStack itemStack) {
         for (int i = 0; i <= 5; i++) {
             ItemStack current = getItem(i);
-            if (itemStack.is(Items.AIR)) return 0;
-            if (current.isEmpty()) return i;
+            if (itemStack.is(Items.AIR))
+                return 0;
+            if (current.isEmpty())
+                return i;
             if (current.getItem() == itemStack.getItem()) {
-                if (current.getCount() + itemStack.getCount() <= current.getMaxStackSize()) return i;
+                if (current.getCount() + itemStack.getCount() <= current.getMaxStackSize())
+                    return i;
             }
         }
         return -1;
@@ -491,17 +530,21 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     public int hasOutputSpace(ItemStack itemStack) {
         for (int i = 6; i <= 11; i++) {
             ItemStack current = getItem(i);
-            if (itemStack.is(Items.AIR)) return 0;
-            if (current.isEmpty()) return i;
+            if (itemStack.is(Items.AIR))
+                return 0;
+            if (current.isEmpty())
+                return i;
             if (current.getItem() == itemStack.getItem()) {
-                if (current.getCount() + itemStack.getCount() <= current.getMaxStackSize()) return i;
+                if (current.getCount() + itemStack.getCount() <= current.getMaxStackSize())
+                    return i;
             }
         }
         return 0;
     }
 
     private boolean allowedToBreak(BlockState state, Level world, BlockPos pos, Player player) {
-        if (level == null) return false;
+        if (level == null)
+            return false;
 
         if (!state.getBlock().canEntityDestroy(state, world, pos, player) || state.getDestroySpeed(level, pos) == -1)
             return false;
@@ -518,17 +561,23 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     public void refreshPositions(ItemStack itemStack) {
         BlockPos pos1 = NbtUtil.getPos(itemStack.getOrCreateTag().getCompound("pos1"));
         BlockPos pos2 = NbtUtil.getPos(itemStack.getOrCreateTag().getCompound("pos2"));
-        if (pos1 == null || pos2 == null) return;
+        if (pos1 == null || pos2 == null)
+            return;
 
         blockStateList = CalcUtil.getBlockStates(pos2, pos1, level);
     }
 
     public LootParams.Builder getBuilder(Level level, BlockPos pos, boolean isSilktouch) {
         ItemStack stack = new ItemStack(Items.STICK);
-        if (isSilktouch) stack.enchant(Enchantments.SILK_TOUCH, 1);
-        if (isFortune) stack.enchant(Enchantments.BLOCK_FORTUNE, 3);
+        if (isSilktouch)
+            stack.enchant(Enchantments.SILK_TOUCH, 1);
+        if (isFortune)
+            stack.enchant(Enchantments.BLOCK_FORTUNE, 3);
 
-        lootcontextBuilder = (new LootParams.Builder((ServerLevel) level)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos)).withParameter(LootContextParams.TOOL, stack).withOptionalParameter(LootContextParams.BLOCK_ENTITY, this);
+        lootcontextBuilder = (new LootParams.Builder((ServerLevel) level))
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                .withParameter(LootContextParams.TOOL, stack)
+                .withOptionalParameter(LootContextParams.BLOCK_ENTITY, this);
         return lootcontextBuilder;
     }
 
@@ -656,8 +705,10 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
     @Override
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        if (level == null) return;
-        if (level.isClientSide && net.getDirection() == PacketFlow.CLIENTBOUND) handleUpdateTag(Objects.requireNonNull(pkt.getTag()));
+        if (level == null)
+            return;
+        if (level.isClientSide && net.getDirection() == PacketFlow.CLIENTBOUND)
+            handleUpdateTag(Objects.requireNonNull(pkt.getTag()));
     }
 
     @Nullable
@@ -665,7 +716,6 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
-
 
     @Override
     public void saveAdditional(@NotNull CompoundTag nbt) {
@@ -704,29 +754,37 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
     @Override
     public int @NotNull [] getSlotsForFace(@NotNull Direction pSide) {
-        if (pSide == Direction.DOWN) return new int[]{6, 7, 8, 9, 10, 11};
-        if (pSide == Direction.UP) return new int[]{0, 1, 2, 3, 4, 5};
+        if (pSide == Direction.DOWN)
+            return new int[] { 6, 7, 8, 9, 10, 11 };
+        if (pSide == Direction.UP)
+            return new int[] { 0, 1, 2, 3, 4, 5 };
         switch (this.getBlockState().getValue(QuarryBlock.FACING)) {
             case NORTH -> {
-                if (pSide == Direction.WEST) return new int[]{13};
+                if (pSide == Direction.WEST)
+                    return new int[] { 13 };
             }
             case EAST -> {
-                if (pSide == Direction.NORTH) return new int[]{13};
+                if (pSide == Direction.NORTH)
+                    return new int[] { 13 };
             }
             case SOUTH -> {
-                if (pSide == Direction.EAST) return new int[]{13};
+                if (pSide == Direction.EAST)
+                    return new int[] { 13 };
             }
             default -> {
-                if (pSide == Direction.SOUTH) return new int[]{13};
+                if (pSide == Direction.SOUTH)
+                    return new int[] { 13 };
             }
         }
-        return new int[]{};
+        return new int[] {};
     }
 
     @Override
     public boolean canPlaceItemThroughFace(int pIndex, @NotNull ItemStack pItemStack, @Nullable Direction pDirection) {
-        if (pDirection == Direction.DOWN) return false;
-        if (pDirection == Direction.UP) return ForgeHooks.getBurnTime(pItemStack, null) > 0;
+        if (pDirection == Direction.DOWN)
+            return false;
+        if (pDirection == Direction.UP)
+            return ForgeHooks.getBurnTime(pItemStack, null) > 0;
         return pItemStack.getItem() instanceof BlockItem;
     }
 
@@ -755,7 +813,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
     @Override
     public boolean isEmpty() {
         for (ItemStack itemStack : items) {
-            if (itemStack.isEmpty()) return true;
+            if (itemStack.isEmpty())
+                return true;
         }
         return false;
     }
@@ -791,12 +850,14 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        if (level == null) return false;
+        if (level == null)
+            return false;
 
         if (level.getBlockEntity(worldPosition) != this) {
             return false;
         } else {
-            return !(player.distanceToSqr((double) worldPosition.getX() + 0.5D, (double) worldPosition.getY() + 0.5D, (double) worldPosition.getZ() + 0.5D) > 64.0D);
+            return !(player.distanceToSqr((double) worldPosition.getX() + 0.5D, (double) worldPosition.getY() + 0.5D,
+                    (double) worldPosition.getZ() + 0.5D) > 64.0D);
         }
     }
 
