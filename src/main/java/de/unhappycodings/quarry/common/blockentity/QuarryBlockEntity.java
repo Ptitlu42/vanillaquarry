@@ -165,7 +165,8 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
         if (burnTime >= CommonConfig.quarryIdleConsumption.get() && burnTicks >= 20
                 && !state.getValue(QuarryBlock.WORKING)) {
-            burnTime -= CommonConfig.quarryIdleConsumption.get();
+            // Mode inactif - consommation réduite à 0
+            burnTime -= 0; // CommonConfig.quarryIdleConsumption.get();
             burnTicks = 0;
         }
         burnTicks++;
@@ -236,7 +237,7 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
 
                         if (currentBlockState.getBlock() == Blocks.AIR) {
                             updateCardNbt(itemTag, blockIndex + 1, currentBlock.getY());
-                            burnTime -= (int) fuelModifier;
+                            burnTime -= (int) (fuelModifier / 10); // Réduit la consommation par 10
                         } else {
                             // Block Drops Looping with Inventory-Space Checking and Block Breaking
                             List<ItemStack> drops = currentBlockState
@@ -250,14 +251,14 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                                     level.setBlock(currentBlock, Blocks.AIR.defaultBlockState(), 3);
                                 }
                                 updateCardNbt(itemTag, blockIndex + 1, currentBlock.getY());
-                                burnTime -= (int) fuelModifier;
+                                burnTime -= (int) (fuelModifier / 10); // Réduit la consommation par 10
                                 return;
                             }
                             boolean broken = false;
                             for (ItemStack drop : drops) {
                                 if (isVoid) {
                                     updateCardNbt(itemTag, blockIndex + 1, currentBlock.getY());
-                                    burnTime -= (int) fuelModifier;
+                                    burnTime -= (int) (fuelModifier / 10); // Réduit la consommation par 10
                                     broken = true;
                                     break;
                                 }
@@ -276,7 +277,7 @@ public class QuarryBlockEntity extends BaseContainerBlockEntity implements World
                                         if (!filtered)
                                             setItem(index, new ItemStack(drop.getItem(),
                                                     getItem(index).getCount() + drop.getCount()));
-                                        burnTime -= (int) fuelModifier;
+                                        burnTime -= (int) (fuelModifier / 10); // Réduit la consommation par 10
                                         broken = true;
                                     }
                                     updateCardNbt(itemTag, blockIndex + 1, currentBlock.getY());
